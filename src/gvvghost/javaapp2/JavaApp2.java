@@ -1,28 +1,80 @@
 package gvvghost.javaapp2;
+
 import java.net.*;
-import java.util.*;
 import java.io.*;
 
 public class JavaApp2
 {
     public static void main(String[] args)
     {
+        Socket socket = null;
         try
         {
-            Socket clientSocket = new Socket("192.168.0.100" , 5555);
-            InputStream inputStream = clientSocket.getInputStream();
-            DataInputStream dataInputStream = new DataInputStream(inputStream);
-            String messege = dataInputStream.readUTF();
-            System.out.println(messege);
-            dataInputStream.close();
-            inputStream.close();
-            clientSocket.close();
+            try
+            {
+                System.out.println("Welcome to Client side\n" +
+                                   "Connecting to the server\n\t" +
+                                   "(IP address " + localhost +
+                                   ", port " + serverPort + ")");
+                InetAddress ipAddress = InetAddress.getByName(localhost);
+                socket = new Socket(ipAddress, serverPort);
+                System.out.println("The connection established.");
+
+                System.out.println(
+                        "\tLocalPort = " +
+                                socket.getLocalPort() +
+                        "\n\tInetAddress.HostAddress = " +
+                                socket.getInetAddress().getHostAddress() +
+                        "\n\tReceiveBufferSize (SO_RCVBUF) = " +
+                                socket.getReceiveBufferSize());
+
+                InputStream sin = socket.getInputStream();
+                OutputStream sout = socket.getOutputStream();
+
+                DataInputStream in = new DataInputStream(sin);
+                DataOutputStream out = new DataOutputStream(sout);
+
+                InputStreamReader isr = new InputStreamReader(System.in);
+                BufferedReader keyboard = new BufferedReader(isr);
+                String line = null;
+                System.out.println("Type in something and press enter");
+                System.out.println();
+                while(true){
+                    line = keyboard.readLine();
+                    out.writeUTF(line);
+                    out.flush();
+                    line = in.readUTF();
+                    if(line.endsWith("quit"))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        System.out.println("The server sent me this line :\n\t" + line);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
         }
-        catch (ConnectException e)
+        finally
         {
-            System.out.println("Cannot connect!");
+            try
+            {
+                if(socket != null)
+                {
+                    socket.close();
+                }
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
         }
-        catch (IOException e)
-        {}
     }
+
+    private static final int    serverPort = 4321;
+    private static final String localhost  = "127.0.0.1";
 }
